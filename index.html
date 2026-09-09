@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mr. Hua — Geometry</title>
+<title>Geometry — Mr. Hua</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=Public+Sans:wght@400;600&display=swap" rel="stylesheet">
@@ -15,33 +15,18 @@
   <div class="inner"><h1>Mr. Hua's Geometry Demo</h1></div>
 </div>
 
-<main><div class="grid" id="grid"></div></main>
+<main>
+  <div class="grid">
+    <a class="card" href="units/unit1.html">Unit 1 Constructions and Transformations</a>
+    <a class="card" href="units/unit2.html">Unit 2 Congruence</a>
+    <a class="card" href="units/unit3.html">Unit 3 Similarity</a>
+    <a class="card" href="units/unit4.html">Unit 4 Right Triangle Trigonometry</a>
+    <a class="card" href="units/unit5.html">Unit 5 Solid Geometry</a>
+    <a class="card" href="units/unit6.html">Unit 6 Coordinate Geometry</a>
+    <a class="card" href="units/unit7.html">Unit 7 Circles</a>
+    <a class="card" href="units/unit8.html">Unit 8 Conditional Probability</a>
+  </div>
+</main>
 
-<script>
-/* =====================================================================
-   EDIT THIS LIST.
-   "text" is what the card says. "link" is the page it opens.
-   ===================================================================== */
-const UNITS = [
-  { text:"Unit 1 Constructions and Transformations", link:"units/unit1.html" },
-  { text:"Unit 2 Congruence",                        link:"units/unit2.html" },
-  { text:"Unit 3 Similarity",                        link:"units/unit3.html" },
-  { text:"Unit 4 Right Triangle Trigonometry",       link:"units/unit4.html" },
-  { text:"Unit 5 Solid Geometry",                    link:"units/unit5.html" },
-  { text:"Unit 6 Coordinate Geometry",               link:"units/unit6.html" },
-  { text:"Unit 7 Circles",                           link:"units/unit7.html" },
-  { text:"Unit 8 Conditional Probability",           link:"units/unit8.html" }
-];
-/* ===================================================================== */
-
-const grid = document.getElementById("grid");
-UNITS.forEach(u => {
-  const card = document.createElement("a");
-  card.className = "card";
-  card.href = u.link;
-  card.textContent = u.text;
-  grid.appendChild(card);
-});
-</script>
 </body>
 </html>
