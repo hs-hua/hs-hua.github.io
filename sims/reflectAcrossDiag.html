@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reflecting across a slanted line</title>
+<style>
+  :root{
+    --bg:#0f141a; --panel:#161d27; --line:#242e3b;
+    --ink:#e7edf5; --muted:#93a1b4;
+    --mirror:#9fb0c6; --grid:rgba(147,161,180,.10);
+    --pre:#35c6a0; --pre-fill:rgba(53,198,160,.16);
+    --img:#f08a4b; --img-fill:rgba(240,138,75,.16);
+    --build:#6f7f93; --wrong:#e0566b; --ok:#35c6a0;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 56px}
+  h1{font-size:26px;font-weight:600;letter-spacing:-.01em;margin:0 0 6px}
+  .sub{color:var(--muted);font-size:15px;line-height:1.6;max-width:64ch;margin:0 0 20px}
+  .modes{display:flex;gap:8px;margin-bottom:16px}
+  .modes button[aria-pressed=true]{background:#20493f;border-color:#2c6b5b;color:#eafff8}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  svg{display:block;width:100%;height:auto;touch-action:none}
+  #scene{transition:transform .6s cubic-bezier(.4,0,.2,1)}
+  .turning .lbl{opacity:0}
+  .lbl{transition:opacity .2s}
+  .vtx{cursor:grab}
+  .vtx:active{cursor:grabbing}
+  .caption{padding:14px 18px;border-top:1px solid var(--line);font-size:16px;line-height:1.55}
+  .caption span{color:var(--muted)}
+  .readout{display:none;gap:26px;flex-wrap:wrap;padding:14px 18px;border-top:1px solid var(--line);
+    font-size:15px;color:var(--muted)}
+  .readout b{font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .bad b{color:var(--wrong)} .good b{color:var(--ok)}
+  .controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:18px}
+  button{font:inherit;font-size:15px;color:var(--ink);background:#1e2733;
+    border:1px solid var(--line);border-radius:9px;padding:9px 15px;cursor:pointer}
+  button:hover{background:#26313f}
+  button:focus-visible{outline:2px solid var(--pre);outline-offset:2px}
+  button.primary{background:#20493f;border-color:#2c6b5b}
+  button.primary:hover{background:#276054}
+  button:disabled{opacity:.4;cursor:default}
+  .slider{display:flex;align-items:center;gap:11px;margin-left:auto;color:var(--muted);font-size:15px}
+  input[type=range]{width:180px;accent-color:var(--pre)}
+  .hint{margin-top:16px;color:var(--muted);font-size:14px;line-height:1.6}
+  kbd{background:#1e2733;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px}
+  @media (prefers-reduced-motion: reduce){#scene{transition:none}}
+  @media (max-width:640px){.slider{margin-left:0;width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Reflecting across a slanted line</h1>
+  <p class="sub">Turn the page until the mirror stands straight up. The problem does not change — only your view of it does. One square on the grid is 1 unit.</p>
+
+  <div class="modes">
+    <button id="mBuild" aria-pressed="true">Build it</button>
+    <button id="mTry" aria-pressed="false">Your turn</button>
+  </div>
+
+  <div class="stage">
+    <svg id="board" viewBox="0 0 760 560" role="img" aria-label="A mirror line that can be tilted, with a reflection built one mark at a time or placed by the student">
+      <g id="scene"></g>
+    </svg>
+    <div class="caption" id="caption"></div>
+    <div class="readout" id="readout"></div>
+  </div>
+
+  <div class="controls" id="buildCtl">
+    <button id="turn" class="primary">Turn the page</button>
+    <button id="next">Next mark</button>
+    <button id="back">Undo mark</button>
+    <button id="reset">Start over</button>
+    <label class="slider">Tilt of mirror
+      <input id="angle" type="range" min="0" max="180" step="1" value="45">
+      <span id="angleOut">45°</span>
+    </label>
+  </div>
+
+  <div class="controls" id="tryCtl" style="display:none">
+    <button id="turn2" class="primary">Turn the page</button>
+    <button id="showPerp">Show the perpendicular</button>
+    <button id="newPt">New point</button>
+    <label class="slider">Tilt of mirror
+      <input id="angle2" type="range" min="0" max="180" step="1" value="45">
+      <span id="angleOut2">45°</span>
+    </label>
+  </div>
+
+  <p class="hint">Drag the dots. Keys: <kbd>T</kbd> turn the page, <kbd>P</kbd> show the perpendicular, <kbd>&rarr;</kbd> <kbd>&larr;</kbd> step the build, <kbd>R</kbd> start over or new point.</p>
+</div>
+
+<script>
+const O = {x:380, y:270}, U = 40;
+const NAMES = ["A","B","C"];
+let mode = "build";
+let theta = 45, turned = false, step = 0, showPerp = false;
+let tri = [{x:240,y:160},{x:310,y:130},{x:265,y:225}];
+let ptA = {x:245,y:165}, guess = {x:495,y:210};
+
+const svg = document.getElementById("board");
+const scene = document.getElementById("scene");
+const caption = document.getElementById("caption");
+const readout = document.getElementById("readout");
+
+const rad = d => d*Math.PI/180;
+const dir = () => ({x:Math.cos(rad(theta)), y:-Math.sin(rad(theta))});
+const nor = () => ({x:Math.sin(rad(theta)), y:Math.cos(rad(theta))});
+const signed = p => { const n = nor(); return (p.x-O.x)*n.x + (p.y-O.y)*n.y; };
+
+function foot(p){
+  const d = dir(), t = (p.x-O.x)*d.x + (p.y-O.y)*d.y;
+  return {x:O.x + t*d.x, y:O.y + t*d.y};
+}
+function reflect(p){ const f = foot(p); return {x:2*f.x-p.x, y:2*f.y-p.y}; }
+function pageAngle(){ return turned ? theta - 90 : 0; }
+function half(a,b){ return {x:(a.x+b.x)/2, y:(a.y+b.y)/2}; }
+
+function tick(a,b,mid,color){
+  const dx=b.x-a.x, dy=b.y-a.y, L=Math.hypot(dx,dy)||1;
+  const nx=-dy/L*6, ny=dx/L*6;
+  return `<line x1="${mid.x-nx}" y1="${mid.y-ny}" x2="${mid.x+nx}" y2="${mid.y+ny}" stroke="${color}" stroke-width="2"/>`;
+}
+function label(text, p, away, color, size){
+  const dx = p.x-away.x, dy = p.y-away.y, L = Math.hypot(dx,dy)||1;
+  const x = p.x + dx/L*24, y = p.y + dy/L*24 + 5, r = -pageAngle();
+  return `<text class="lbl" x="${x}" y="${y}" fill="${color}" font-size="${size||17}" font-weight="600"
+    text-anchor="middle" transform="rotate(${r} ${x} ${y})">${text}</text>`;
+}
+function textAt(t, x, y, color, size){
+  const r = -pageAngle();
+  return `<text class="lbl" x="${x}" y="${y}" fill="${color}" font-size="${size||15}" font-weight="600"
+    text-anchor="middle" transform="rotate(${r} ${x} ${y})">${t}</text>`;
+}
+function rightAngleMark(f, toward, color){
+  const d = dir(), a = 13, ux = toward.x-f.x, uy = toward.y-f.y, L = Math.hypot(ux,uy)||1;
+  const px = ux/L*a, py = uy/L*a, qx = d.x*a, qy = d.y*a;
+  return `<path d="M ${f.x+px} ${f.y+py} L ${f.x+px+qx} ${f.y+py+qy} L ${f.x+qx} ${f.y+qy}"
+          fill="none" stroke="${color}" stroke-width="1.5"/>`;
+}
+function grid(){
+  let g = "";
+  for(let k=-12;k<=12;k++){
+    const o = k*U;
+    g += `<line x1="${O.x-500}" y1="${O.y+o}" x2="${O.x+500}" y2="${O.y+o}" stroke="var(--grid)" stroke-width="1"/>`;
+    g += `<line x1="${O.x+o}" y1="${O.y-500}" x2="${O.x+o}" y2="${O.y+500}" stroke="var(--grid)" stroke-width="1"/>`;
+  }
+  return g;
+}
+function mirrorLine(){
+  const d = dir(), E = 340;
+  return `<line x1="${O.x-d.x*E}" y1="${O.y-d.y*E}" x2="${O.x+d.x*E}" y2="${O.y+d.y*E}"
+          stroke="var(--mirror)" stroke-width="2"/>`;
+}
+
+const CAPTIONS = [
+  "Start. Where does A land on the other side of the mirror?",
+  "From A, draw the line that meets the mirror at a right angle.",
+  "Mark where that line crosses the mirror. This point is halfway.",
+  "Count the same distance past the crossing. That is A\u2032.",
+  "From B, draw the perpendicular to the mirror.",
+  "Mark the crossing point.",
+  "Same distance past it. That is B\u2032.",
+  "From C, draw the perpendicular to the mirror.",
+  "Mark the crossing point.",
+  "Same distance past it. That is C\u2032.",
+  "Join A\u2032B\u2032C\u2032. <span>Every step used the same two words: perpendicular, and equal.</span>"
+];
+const MAXSTEP = 10;
+
+function renderBuild(){
+  const img = tri.map(reflect), ft = tri.map(foot);
+  let s = grid() + mirrorLine();
+  for(let i=0;i<3;i++){
+    const b = i*3;
+    if(step >= b+1){
+      s += `<line x1="${tri[i].x}" y1="${tri[i].y}" x2="${img[i].x}" y2="${img[i].y}"
+            stroke="var(--build)" stroke-width="1.5" stroke-dasharray="6 5"/>`;
+      s += rightAngleMark(ft[i], tri[i], "var(--build)");
+    }
+    if(step >= b+2) s += `<circle cx="${ft[i].x}" cy="${ft[i].y}" r="4.5" fill="var(--mirror)"/>`;
+    if(step >= b+3){
+      s += tick(tri[i], ft[i], half(tri[i],ft[i]), "var(--build)");
+      s += tick(ft[i], img[i], half(ft[i],img[i]), "var(--build)");
+      s += `<circle cx="${img[i].x}" cy="${img[i].y}" r="6" fill="var(--img)"/>`;
+      s += label(NAMES[i]+"\u2032", img[i], ft[i], "var(--img)");
+    }
+  }
+  if(step >= MAXSTEP)
+    s += `<polygon points="${img.map(p=>p.x+","+p.y).join(" ")}" fill="var(--img-fill)" stroke="var(--img)" stroke-width="2.5"/>`;
+  s += `<polygon points="${tri.map(p=>p.x+","+p.y).join(" ")}" fill="var(--pre-fill)" stroke="var(--pre)" stroke-width="2.5"/>`;
+  const cen = {x:(tri[0].x+tri[1].x+tri[2].x)/3, y:(tri[0].y+tri[1].y+tri[2].y)/3};
+  tri.forEach((p,i)=>{
+    s += `<circle class="vtx" data-k="t${i}" cx="${p.x}" cy="${p.y}" r="9" fill="var(--pre)"/>`;
+    s += label(NAMES[i], p, cen, "var(--pre)");
+  });
+  scene.innerHTML = s;
+  caption.innerHTML = CAPTIONS[step];
+  readout.style.display = "none";
+  document.getElementById("next").disabled = step >= MAXSTEP;
+  document.getElementById("back").disabled = step === 0;
+}
+
+function renderTry(){
+  const d = dir(), n = nor();
+  const trueImg = reflect(ptA), fA = foot(ptA);
+  const vx = guess.x-ptA.x, vy = guess.y-ptA.y, VL = Math.hypot(vx,vy)||1;
+  const angleToMirror = Math.acos(Math.min(1,Math.abs(vx*d.x+vy*d.y)/VL))*180/Math.PI;
+  const sA = signed(ptA), sG = signed(guess);
+  const crosses = sA*sG < 0;
+  const cross = crosses ? {x:ptA.x + vx*(sA/(sA-sG)), y:ptA.y + vy*(sA/(sA-sG))} : null;
+  const dA = Math.abs(sA)/U, dG = Math.abs(sG)/U;
+  const perp = Math.abs(angleToMirror-90) <= 2;
+  const equal = Math.abs(dA-dG) <= 0.12;
+  const win = perp && equal && crosses;
+  const gcol = win ? "var(--ok)" : "var(--wrong)";
+
+  let s = grid() + mirrorLine();
+
+  if(showPerp){
+    s += `<line x1="${ptA.x}" y1="${ptA.y}" x2="${trueImg.x}" y2="${trueImg.y}"
+          stroke="var(--build)" stroke-width="1.5" stroke-dasharray="6 5"/>`;
+    s += rightAngleMark(fA, ptA, "var(--build)");
+    s += `<circle cx="${fA.x}" cy="${fA.y}" r="4.5" fill="var(--mirror)"/>`;
+    s += tick(ptA, fA, half(ptA,fA), "var(--build)");
+    s += tick(fA, trueImg, half(fA,trueImg), "var(--build)");
+    s += `<circle cx="${trueImg.x}" cy="${trueImg.y}" r="7" fill="none" stroke="var(--img)" stroke-width="2.5"/>`;
+    s += label("A\u2032 belongs here", trueImg, fA, "var(--img)", 14);
+  }
+
+  s += `<line x1="${ptA.x}" y1="${ptA.y}" x2="${guess.x}" y2="${guess.y}" stroke="${gcol}" stroke-width="2.5"/>`;
+  if(cross){
+    s += `<circle cx="${cross.x}" cy="${cross.y}" r="4" fill="${gcol}"/>`;
+    s += textAt(angleToMirror.toFixed(0)+"\u00B0", cross.x + n.x*28, cross.y + n.y*28 + 5, gcol, 15);
+  }
+  s += `<circle class="vtx" data-k="g" cx="${guess.x}" cy="${guess.y}" r="9" fill="${gcol}"/>`;
+  s += label("your A\u2032", guess, ptA, gcol, 15);
+  s += `<circle class="vtx" data-k="a" cx="${ptA.x}" cy="${ptA.y}" r="9" fill="var(--pre)"/>`;
+  s += label("A", ptA, guess, "var(--pre)");
+
+  scene.innerHTML = s;
+
+  caption.innerHTML = win
+    ? "Perpendicular and equal. <span>That is the reflection, and it stays the reflection at every tilt.</span>"
+    : turned
+      ? ""
+      : "Drag <b>your A\u2032</b> to where you think A lands, then turn the page. <span>Your line does not have to be perpendicular. That is the point.</span>";
+
+  readout.style.display = "none";
+}
+
+function render(){
+  if(mode === "build") renderBuild(); else renderTry();
+  scene.setAttribute("transform", `rotate(${pageAngle()} ${O.x} ${O.y})`);
+}
+
+function toLocal(evt){
+  const m = scene.getScreenCTM().inverse();
+  const pt = new DOMPoint(evt.clientX, evt.clientY).matrixTransform(m);
+  return {x:pt.x, y:pt.y};
+}
+let drag = null;
+svg.addEventListener("pointerdown", e=>{
+  const t = e.target;
+  if(t.classList && t.classList.contains("vtx")){
+    drag = t.dataset.k; svg.setPointerCapture(e.pointerId); e.preventDefault();
+  }
+});
+svg.addEventListener("pointermove", e=>{
+  if(!drag) return;
+  const p = toLocal(e);
+  const q = {x:Math.max(20,Math.min(740,p.x)), y:Math.max(20,Math.min(540,p.y))};
+  if(drag === "a") ptA = q;
+  else if(drag === "g") guess = q;
+  else tri[+drag[1]] = q;
+  render();
+});
+svg.addEventListener("pointerup", ()=>{ drag = null; });
+svg.addEventListener("pointercancel", ()=>{ drag = null; });
+
+function doTurn(){
+  turned = !turned;
+  const t = turned ? "Turn it back" : "Turn the page";
+  document.getElementById("turn").textContent = t;
+  document.getElementById("turn2").textContent = t;
+  svg.classList.add("turning");
+  scene.setAttribute("transform", `rotate(${pageAngle()} ${O.x} ${O.y})`);
+  setTimeout(()=>{ svg.classList.remove("turning"); render(); }, 620);
+}
+function setMode(m){
+  mode = m;
+  document.getElementById("mBuild").setAttribute("aria-pressed", m==="build");
+  document.getElementById("mTry").setAttribute("aria-pressed", m==="try");
+  document.getElementById("buildCtl").style.display = m==="build" ? "flex" : "none";
+  document.getElementById("tryCtl").style.display = m==="try" ? "flex" : "none";
+  render();
+}
+function setPerp(v){
+  showPerp = v;
+  document.getElementById("showPerp").textContent = v ? "Hide the perpendicular" : "Show the perpendicular";
+  render();
+}
+function newPoint(){
+  ptA = {x:O.x - 190 + Math.random()*80, y:O.y - 150 + Math.random()*130};
+  guess = {x:O.x + 80 + Math.random()*130, y:O.y - 110 + Math.random()*200};
+  setPerp(false);
+}
+
+document.getElementById("mBuild").onclick = ()=>setMode("build");
+document.getElementById("mTry").onclick = ()=>setMode("try");
+document.getElementById("turn").onclick = doTurn;
+document.getElementById("turn2").onclick = doTurn;
+document.getElementById("showPerp").onclick = ()=>setPerp(!showPerp);
+document.getElementById("newPt").onclick = newPoint;
+document.getElementById("next").onclick = ()=>{ if(step<MAXSTEP){ step++; render(); } };
+document.getElementById("back").onclick = ()=>{ if(step>0){ step--; render(); } };
+document.getElementById("reset").onclick = ()=>{
+  step = 0; tri = [{x:240,y:160},{x:310,y:130},{x:265,y:225}]; render();
+};
+function setAngle(v){
+  theta = +v;
+  document.getElementById("angle").value = v;
+  document.getElementById("angle2").value = v;
+  document.getElementById("angleOut").textContent = v + "\u00B0";
+  document.getElementById("angleOut2").textContent = v + "\u00B0";
+  render();
+}
+document.getElementById("angle").oninput = e=>setAngle(e.target.value);
+document.getElementById("angle2").oninput = e=>setAngle(e.target.value);
+
+document.addEventListener("keydown", e=>{
+  if(e.target.tagName === "INPUT") return;
+  const k = e.key.toLowerCase();
+  if(e.key === "ArrowRight" && mode==="build" && step<MAXSTEP){ step++; render(); }
+  if(e.key === "ArrowLeft" && mode==="build" && step>0){ step--; render(); }
+  if(k === "t") doTurn();
+  if(k === "p" && mode==="try") setPerp(!showPerp);
+  if(k === "r"){ if(mode==="build") document.getElementById("reset").click(); else newPoint(); }
+});
+
+render();
+</script>
+</body>
+</html>
