@@ -25,48 +25,18 @@
             stroke-linecap="round" stroke-linejoin="round"/></svg>
     All units</a>
 
-  <div id="sections"></div>
+  <div id="sections">
+
+    <h2>Section A</h2>
+    <p class="pending">Link to perpendicular bisector</p>
+
+    <h2>Section B</h2>
+    <p>
+      <a href="https://hs-hua.github.io/sims/u1Less10Activity1.html">Lesson 10 Activity 1: What's the Same?</a>
+    </p>
+
+  </div>
 </main>
 
-<script>
-/* =====================================================================
-   EDIT THIS LIST.
-   One object per section. Fill in "link" with the simulation address.
-   An empty link shows as plain grey text.
-   ===================================================================== */
-const SECTIONS = [
-  { letter:"A", text:"Link to perpendicular bisector", link:"" },
-  { letter:"B", text:"Lesson 10 Activity 1: What's the Same?",    
-   link:"https://hs-hua.github.io/sims/u1Less10Activity1.html" }
-];
-/* ===================================================================== */
-
-const box = document.getElementById("sections");
-
-if (SECTIONS.length === 0) {
-  const p = document.createElement("p");
-  p.className = "pending";
-  p.textContent = "Simulations coming soon.";
-  box.appendChild(p);
-} else {
-  SECTIONS.forEach(s => {
-    const h2 = document.createElement("h2");
-    h2.textContent = "Section " + s.letter;
-    box.appendChild(h2);
-
-    const p = document.createElement("p");
-    if (typeof s.link === "string" && s.link.trim() !== "") {
-      const a = document.createElement("a");
-      a.href = s.link;
-      a.textContent = s.text;
-      p.appendChild(a);
-    } else {
-      p.className = "pending";
-      p.textContent = s.text;
-    }
-    box.appendChild(p);
-  });
-}
-</script>
 </body>
 </html>
