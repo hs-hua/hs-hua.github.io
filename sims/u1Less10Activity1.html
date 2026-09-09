@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Activity 1: What's the Same?</title>
+<style>
+  :root{ --ink:#1a2434; --muted:#5b6b80; --line:#d8e0ea; --bg:#f5f8fc; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+       background:var(--bg);color:var(--ink)}
+  .wrap{max-width:1180px;margin:0 auto;padding:18px}
+  h1{font-size:20px;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 14px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .tab{border:2px solid var(--line);background:#fff;border-radius:10px;
+       padding:9px 13px;font-size:14px;font-weight:600;cursor:pointer;color:var(--muted)}
+  .tab .dotc{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:7px;vertical-align:-1px}
+  .tab.on{color:#fff}
+  .tab .chk{margin-left:7px;font-weight:800}
+  .main{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+  .board{background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px;flex:0 0 auto}
+  svg{display:block;touch-action:manipulation}
+  .panel{flex:1 1 300px;min-width:290px;display:flex;flex-direction:column;gap:12px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+  .task{font-weight:700;font-size:16px;margin:0 0 6px}
+  .ask{font-size:17px;margin:0 0 10px;line-height:1.45}
+  .ask b{font-size:20px}
+  .dots{display:flex;gap:7px;margin:10px 0 4px;flex-wrap:wrap}
+  .dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);
+       display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted);background:#fff}
+  .dot.done{color:#fff;border-color:transparent}
+  .dot.now{border-color:var(--ink);color:var(--ink)}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  button.b{border:2px solid var(--line);background:#fff;border-radius:9px;padding:8px 12px;
+       font-size:14px;font-weight:600;cursor:pointer;color:var(--ink)}
+  button.b:hover{background:#eef3f9}
+  .fb{margin-top:10px;font-size:15px;min-height:22px;font-weight:600;line-height:1.45}
+  .fb.good{color:#0a7d3c}.fb.bad{color:#c62828}.fb.hint{color:#1b5ea8;font-weight:500}
+  .ans{margin-top:12px;font-size:15px;line-height:1.6}
+  .ans p{margin:0 0 10px}
+  details{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:16px}
+  summary{cursor:pointer;font-weight:700}
+  details ol{margin:10px 0 0 18px;padding:0;line-height:1.65;font-size:14px}
+  details .q{font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Activity 1: What's the Same?</h1>
+  <p class="sub">Click a grid dot to place each corner of the new figure. One corner at a time.</p>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="main">
+    <div class="board"><svg id="board"></svg></div>
+    <div class="panel">
+      <div class="card">
+        <p class="task" id="taskName"></p>
+        <p class="ask" id="ask"></p>
+        <div class="dots" id="dots"></div>
+        <div class="btns" id="btns">
+          <button class="b" id="hint">Hint</button>
+          <button class="b" id="show">Show me</button>
+          <button class="b" id="reset">Start over</button>
+        </div>
+        <div class="fb" id="fb"></div>
+        <div class="ans" id="ans"></div>
+      </div>
+    </div>
+  </div>
+
+  <details>
+    <summary>Answers and teaching notes</summary>
+    <ol>
+      <li><span class="q">1 — slide along v.</span> Every corner moves right 2 columns and down 1 unit.</li>
+      <li><span class="q">2 — flip over line y.</span> Each corner stays on its own horizontal level and lands the same number of columns on the far side of line y. Corner A is 5 columns from the line, so it goes 5 columns past it.</li>
+      <li><span class="q">3 — flip over line m.</span> Each corner travels at a right angle to m and goes the same distance past it. Countable version: every corner sits on one of the grid lines parallel to m. If d parallel lines separate the corner from m, the image is d columns right and 1½ × d units down. A and F: d = 2. D and E: d = 3. B and C: d = 4.</li>
+      <li><span class="q">4 — slide along w, then flip over line y.</span> Arrow w points the same way as arrow v but is 2½ times as long: right 5 columns, down 2½ units. After the slide, the left edge of the figure lands exactly on line y. Those two corners sit on the mirror, so the flip leaves them fixed and the rest swings across like a hinge.</li>
+      <li><span class="q">5 — how are the images the same? How are they different?</span><br>
+      Same: all four are congruent to S — identical side lengths, angle measures, perimeter, and area. Rigid transformations never change size or shape.<br>
+      Different: position, and orientation. Reading the corners A → B → C → D → E → F runs one way around S and the same way around image 1, because a slide preserves orientation. It runs the opposite way around images 2, 3, and 4, because each of those involves one flip. Image 4 uses a slide and a flip, but only one flip, so it is reversed like the others.</li>
+      <li><span class="q">Does any point stay fixed?</span> In 1, 2, and 3, no. In 4, the two corners that land on line y after the slide stay put during the flip. A point on the mirror line always maps to itself.</li>
+    </ol>
+  </details>
+</div>
+
+<script>
+const H = Math.sqrt(3)/2;
+const U = 54, M = 24;
+const CMIN=-2, CMAX=11, YMIN=-6, YMAX=4;
+const W = (CMAX-CMIN)*H*U + 2*M;
+const HT = (YMAX-YMIN)*U + 2*M;
+
+const svg = document.getElementById('board');
+svg.setAttribute('width', W); svg.setAttribute('height', HT);
+svg.setAttribute('viewBox', `0 0 ${W} ${HT}`);
+svg.style.maxWidth='100%'; svg.style.height='auto';
+
+const sx = x => M + (x - CMIN*H)*U;
+const sy = y => M + (YMAX - y)*U;
+const P  = (col,n) => ({x: col*H, y: n + col/2});
+const lat = p => { const c = Math.round(p.x/H); return [c, Math.round(p.y - c/2)]; };
+
+const S = [[0,0],[0,2],[2,2],[2,1],[1,1],[1,0]];
+const LBL = ['A','B','C','D','E','F'];
+const Spts = S.map(p => P(p[0],p[1]));
+
+const tv = p => ({x:p.x + 2*H,   y:p.y - 1});
+const tw = p => ({x:p.x + 5*H,   y:p.y - 2.5});
+const ry = p => ({x:10*H - p.x,  y:p.y});
+const rm = p => { const dx=p.x, dy=p.y+2; return {x:0.5*dx + H*dy, y:H*dx - 0.5*dy - 2}; };
+const footY = p => ({x:5*H, y:p.y});
+const footM = p => { const q=rm(p); return {x:(p.x+q.x)/2, y:(p.y+q.y)/2}; };
+
+const stageV = {kind:'trans', vec:'v', f:tv, ask:'Slide Figure S along arrow <b>v</b>.',
+  hint1:'Arrow v goes right 2 columns and down 1 unit. Move every corner the same way.',
+  hint2:'Follow the dashed arrow. It starts at the corner and ends where the corner goes.'};
+const stageY = {kind:'level', f:ry, foot:footY, ask:'Flip Figure S across line <b>y</b>.',
+  hint1:'Stay on the dashed "same level" line. Count the columns from the corner over to line y.',
+  hint2:'Now count the same number of columns past line y. Same count on both sides.'};
+const stageM = {kind:'perp', f:rm, foot:footM, ask:'Flip Figure S across line <b>m</b>.',
+  hint1:'Line m is a mirror. Fold the paper along line m. Where does this corner land?',
+  hint2:'The dashed line is the shortest way from the corner to line m. The small square means it hits m square-on. The two tick marks are equal: corner to m, then m to the new spot.'};
+const stageW = {kind:'trans', vec:'w', f:tw, ask:'Step 1 of 2 — slide Figure S along arrow <b>w</b>.',
+  hint1:'Arrow w goes right 5 columns and down 2½ units. Move every corner the same way.',
+  hint2:'Follow the dashed arrow. Arrow w points the same way as arrow v, just longer.'};
+const stageY2 = {kind:'level', f:ry, foot:footY, ask:'Step 2 of 2 — flip that new figure across line <b>y</b>.',
+  hint1:'Same rule as before. Stay on the dashed "same level" line and count columns to line y.',
+  hint2:'Watch for a corner already sitting on line y. A corner on the mirror does not move.'};
+
+const TASKS = [
+  {label:'1. Slide along v',        color:'#e0700a', stages:[stageV]},
+  {label:'2. Flip over line y',     color:'#7b3fb5', stages:[stageY]},
+  {label:'3. Flip over line m',     color:'#c2185b', stages:[stageM]},
+  {label:'4. Slide w, then flip y', color:'#1565c0', stages:[stageW, stageY2]},
+  {label:'5. Compare them all',     color:'#37474f', discuss:true}
+];
+
+TASKS.forEach(T=>{
+  if(T.discuss){ T.total = 0; return; }
+  let src = Spts;
+  T.stages.forEach(st=>{ st.src = src; st.tgt = src.map(st.f); src = st.tgt; });
+  T.total = T.stages.length*6;
+  T.targets = T.stages.flatMap(st => st.tgt.map(lat));
+  T.final = src;
+});
+
+let cur = 0, hintLvl = 0, anim = null, revealed = false;
+const placed = TASKS.map(()=>[]);
+
+const stageIdx = k => Math.floor(k/6);
+const doneTask = i => !TASKS[i].discuss && placed[i].length === TASKS[i].total;
+
+function buildStatic(){
+  let g = `<defs>
+    <clipPath id="clip"><rect x="${sx(CMIN*H)}" y="${sy(YMAX)}" width="${(CMAX-CMIN)*H*U}" height="${(YMAX-YMIN)*U}"/></clipPath>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#222"/></marker>
+  </defs>`;
+  g += `<rect x="${sx(CMIN*H)}" y="${sy(YMAX)}" width="${(CMAX-CMIN)*H*U}" height="${(YMAX-YMIN)*U}" fill="#fff"/>`;
+  g += `<g clip-path="url(#clip)" stroke="#8fd8d0" stroke-width="1" fill="none">`;
+  for(let c=CMIN;c<=CMAX;c++) g += `<line x1="${sx(c*H)}" y1="${sy(YMAX)}" x2="${sx(c*H)}" y2="${sy(YMIN)}"/>`;
+  for(let k=-12;k<=6;k++)  g += `<line x1="${sx(CMIN*H)}" y1="${sy(0.5*CMIN+k)}" x2="${sx(CMAX*H)}" y2="${sy(0.5*CMAX+k)}"/>`;
+  for(let k=-8;k<=10;k++)  g += `<line x1="${sx(CMIN*H)}" y1="${sy(-0.5*CMIN+k)}" x2="${sx(CMAX*H)}" y2="${sy(-0.5*CMAX+k)}"/>`;
+  g += `</g><g fill="#5aa9a1">`;
+  for(let c=CMIN;c<=CMAX;c++) for(let n=-14;n<=12;n++){
+    const p = P(c,n);
+    if(p.y<YMIN-0.01||p.y>YMAX+0.01) continue;
+    g += `<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="2"/>`;
+  }
+  return g + `</g>`;
+}
+
+function poly(pts, stroke, fill, w, dash){
+  return `<polygon points="${pts.map(p=>`${sx(p.x)},${sy(p.y)}`).join(' ')}" fill="${fill}"
+    stroke="${stroke}" stroke-width="${w||3}" stroke-linejoin="round" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
+}
+function labelOffset(i){ return [[-16,16],[-16,-8],[10,-8],[12,14],[-20,-6],[-18,16]][i]; }
+
+function buildDyn(){
+  const T = TASKS[cur];
+  const k = T.discuss ? 0 : placed[cur].length;
+  const live = !T.discuss && k < T.total;
+  const si = T.discuss ? -1 : stageIdx(Math.min(k, T.total-1));
+  const st = T.discuss ? null : T.stages[si];
+  const C = T.color;
+
+  const hotY = live && st.kind==='level';
+  const hotM = live && st.kind==='perp';
+  const hotV = live && st.vec==='v';
+  const hotW = live && st.vec==='w';
+
+  let g = '';
+  g += `<line x1="${sx(5*H)}" y1="${sy(YMAX)}" x2="${sx(5*H)}" y2="${sy(YMIN)}"
+         stroke="${hotY?C:'#222'}" stroke-width="${hotY?4:2}"/>`;
+  g += `<text x="${sx(5*H)+7}" y="${sy(YMAX)+18}" font-size="17" font-style="italic" fill="${hotY?C:'#222'}">y</text>`;
+  g += `<line x1="${sx(CMIN*H)}" y1="${sy(0.5*CMIN-2)}" x2="${sx(CMAX*H)}" y2="${sy(0.5*CMAX-2)}"
+         stroke="${hotM?C:'#222'}" stroke-width="${hotM?4:2}"/>`;
+  g += `<text x="${sx(4.1*H)}" y="${sy(0.15)}" font-size="17" font-style="italic" fill="${hotM?C:'#222'}">m</text>`;
+  g += `<line x1="${sx(0)}" y1="${sy(0)}" x2="${sx(2*H)}" y2="${sy(-1)}"
+         stroke="${hotV?C:'#222'}" stroke-width="${hotV?4:2.5}" marker-end="url(#ar)"/>`;
+  g += `<text x="${sx(1.1*H)}" y="${sy(-0.15)}" font-size="17" font-style="italic" fill="${hotV?C:'#222'}">v</text>`;
+  g += `<line x1="${sx(1*H)}" y1="${sy(-2.5)}" x2="${sx(6*H)}" y2="${sy(-5)}"
+         stroke="${hotW?C:'#9aa6b4'}" stroke-width="${hotW?4:2}" marker-end="url(#ar)"/>`;
+  g += `<text x="${sx(3.3*H)}" y="${sy(-3.9)}" font-size="16" font-style="italic" fill="${hotW?C:'#9aa6b4'}">w</text>`;
+
+  if(T.discuss){
+    TASKS.forEach((t,i)=>{ if(doneTask(i)) g += poly(t.final, t.color, t.color+'2e', 3); });
+  }
+
+  g += poly(Spts, '#0f9b8e', '#b2e2dc', 3);
+  g += `<text x="${sx(0.35*H)}" y="${sy(1.35)}" font-size="17" fill="#0a6b62" font-weight="700">S</text>`;
+  Spts.forEach((p,i)=>{
+    g += `<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="5" fill="#0f9b8e"/>`;
+    const o = labelOffset(i);
+    g += `<text x="${sx(p.x)+o[0]}" y="${sy(p.y)+o[1]}" font-size="14" font-weight="700" fill="#0a6b62">${LBL[i]}</text>`;
+  });
+
+  if(T.discuss) return g;
+
+  T.stages.forEach((s,i)=>{
+    const pts = placed[cur].slice(i*6, i*6+6).map(q=>P(q[0],q[1]));
+    const last = (i === T.stages.length-1);
+    if(pts.length===6){
+      g += poly(pts, C, last?C+'33':C+'18', last?3.5:2.5, last?null:'8 5');
+    }else if(pts.length>1){
+      g += `<polyline points="${pts.map(p=>`${sx(p.x)},${sy(p.y)}`).join(' ')}" fill="none"
+             stroke="${C}" stroke-width="3" stroke-linejoin="round"/>`;
+    }
+    const mark = "'".repeat(i+1);
+    pts.forEach((p,j)=>{
+      g += `<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="6" fill="${C}"/>`;
+      const o = labelOffset(j);
+      g += `<text x="${sx(p.x)+o[0]}" y="${sy(p.y)+o[1]}" font-size="14" font-weight="700" fill="${C}">${LBL[j]}${mark}</text>`;
+    });
+  });
+
+  if(live){
+    const p = st.src[k - si*6];
+    g += `<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="8" fill="${C}"/>`;
+    g += `<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="13" fill="none" stroke="${C}" stroke-width="2.5" opacity=".55"/>`;
+
+    if(st.kind==='level'){
+      g += `<line x1="${sx(CMIN*H)}" y1="${sy(p.y)}" x2="${sx(CMAX*H)}" y2="${sy(p.y)}"
+             stroke="${C}" stroke-width="2" stroke-dasharray="4 5" opacity=".5"/>`;
+      g += `<text x="${sx(CMIN*H)+5}" y="${sy(p.y)-8}" font-size="12" font-weight="600" fill="${C}" opacity=".85">same level</text>`;
+    }
+    if(st.kind==='perp'){
+      const nx=-0.5, ny=H;
+      g += `<line x1="${sx(p.x-14*nx)}" y1="${sy(p.y-14*ny)}" x2="${sx(p.x+14*nx)}" y2="${sy(p.y+14*ny)}"
+             stroke="${C}" stroke-width="2" stroke-dasharray="4 5" opacity=".5" clip-path="url(#clip)"/>`;
+      g += `<text x="${sx(p.x-2.6*nx)+8}" y="${sy(p.y-2.6*ny)}" font-size="12" font-weight="600" fill="${C}"
+             opacity=".9" stroke="#fff" stroke-width="3.5" paint-order="stroke">shortest way to m</text>`;
+    }
+
+    if(hintLvl>=2){
+      const q = st.f(p);
+      if(st.kind==='trans'){
+        g += `<line x1="${sx(p.x)}" y1="${sy(p.y)}" x2="${sx(q.x)}" y2="${sy(q.y)}"
+               stroke="${C}" stroke-width="3" stroke-dasharray="7 6" marker-end="url(#ar)" opacity=".85"/>`;
+      }else if(st.kind==='level'){
+        const c0 = Math.round(p.x/H), d = 5 - c0, sgn = Math.sign(d) || 1;
+        g += `<line x1="${sx(p.x)}" y1="${sy(p.y)}" x2="${sx(q.x)}" y2="${sy(q.y)}" stroke="${C}" stroke-width="3" opacity=".9"/>`;
+        for(let j=1;j<=Math.abs(d);j++){
+          [c0+sgn*j, 5+sgn*j].forEach(cc=>{
+            g += `<line x1="${sx(cc*H)}" y1="${sy(p.y)-9}" x2="${sx(cc*H)}" y2="${sy(p.y)+9}" stroke="${C}" stroke-width="2.5"/>`;
+            g += `<text x="${sx(cc*H)}" y="${sy(p.y)-14}" font-size="13" font-weight="700" text-anchor="middle" fill="${C}">${j}</text>`;
+          });
+        }
+        if(Math.abs(d) < 0.01){
+          g += `<text x="${sx(p.x)}" y="${sy(p.y)-20}" font-size="13" font-weight="700" text-anchor="middle"
+                 fill="${C}" stroke="#fff" stroke-width="3.5" paint-order="stroke">already on line y</text>`;
+        }
+        g += `<circle cx="${sx(q.x)}" cy="${sy(q.y)}" r="11" fill="none" stroke="${C}" stroke-width="2.5" stroke-dasharray="4 4"/>`;
+      }else{
+        const f = st.foot(p), a = 13/U, dx = H, dy = 0.5;
+        const L = Math.hypot(p.x-f.x, p.y-f.y) || 1;
+        const ux = (p.x-f.x)/L, uy = (p.y-f.y)/L;
+        g += `<line x1="${sx(p.x)}" y1="${sy(p.y)}" x2="${sx(q.x)}" y2="${sy(q.y)}" stroke="${C}" stroke-width="3" opacity=".95"/>`;
+        g += `<path d="M ${sx(f.x+a*dx)} ${sy(f.y+a*dy)} L ${sx(f.x+a*dx+a*ux)} ${sy(f.y+a*dy+a*uy)} L ${sx(f.x+a*ux)} ${sy(f.y+a*uy)}"
+               fill="none" stroke="${C}" stroke-width="2.5"/>`;
+        [[p,f],[f,q]].forEach(seg=>{
+          const mx=(seg[0].x+seg[1].x)/2, my=(seg[0].y+seg[1].y)/2, t=9/U;
+          g += `<line x1="${sx(mx-t*dx)}" y1="${sy(my-t*dy)}" x2="${sx(mx+t*dx)}" y2="${sy(my+t*dy)}" stroke="${C}" stroke-width="3"/>`;
+        });
+        g += `<circle cx="${sx(q.x)}" cy="${sy(q.y)}" r="11" fill="none" stroke="${C}" stroke-width="2.5" stroke-dasharray="4 4"/>`;
+      }
+    }
+  }
+
+  if(anim) g += poly(anim, C, C+'44', 3.5, '8 6');
+  return g;
+}
+
+function draw(){ svg.innerHTML = buildStatic() + buildDyn(); }
+
+function buildTabs(){
+  const el = document.getElementById('tabs');
+  el.innerHTML = TASKS.map((t,i)=>`<button class="tab ${i===cur?'on':''}" data-i="${i}"
+      style="${i===cur?`background:${t.color};border-color:${t.color}`:''}">
+      <span class="dotc" style="background:${i===cur?'#fff':t.color}"></span>${t.label}
+      ${doneTask(i)?'<span class="chk">&#10003;</span>':''}</button>`).join('');
+  [...el.children].forEach(b=>b.onclick=()=>{cur=+b.dataset.i;hintLvl=0;anim=null;revealed=false;fb('','');refresh();});
+}
+
+function fb(msg, cls){ const e=document.getElementById('fb'); e.innerHTML=msg; e.className='fb '+(cls||''); }
+
+function refresh(){
+  const T = TASKS[cur];
+  document.getElementById('taskName').textContent = T.label;
+  document.getElementById('btns').style.display = T.discuss ? 'none' : 'flex';
+  document.getElementById('dots').style.display = T.discuss ? 'none' : 'flex';
+  const ansEl = document.getElementById('ans');
+
+  if(T.discuss){
+    document.getElementById('ask').innerHTML = 'How are the four images the same?<br>How are they different?';
+    const missing = TASKS.filter((t,i)=>!t.discuss && !doneTask(i)).map(t=>t.label[0]);
+    let html = missing.length
+      ? `<p style="color:#5b6b80">Finish ${missing.length===1?'task':'tasks'} ${missing.join(', ')} to see every image on the grid at once.</p>` : '';
+    html += `<button class="b" onclick="reveal()">Show the answer</button>`;
+    if(revealed) html += `
+      <p style="margin-top:12px"><b>Same:</b> all four images are the same size and shape as S. Same side lengths, same angles, same area.</p>
+      <p><b>Different:</b> where they sit, and which way around they read. Going A &rarr; B &rarr; C &rarr; D &rarr; E &rarr; F turns one way on S and the same way on image 1. It turns the opposite way on images 2, 3, and 4, because each of those used a flip.</p>
+      <p>Image 4 used a slide <i>and</i> a flip, but only one flip, so it is reversed just like 2 and 3.</p>`;
+    ansEl.innerHTML = html;
+    buildTabs(); draw(); return;
+  }
+
+  ansEl.innerHTML = '';
+  const k = placed[cur].length, si = stageIdx(Math.min(k, T.total-1)), st = T.stages[si];
+  const j = k - si*6;
+  document.getElementById('ask').innerHTML = k >= T.total
+    ? T.stages[T.stages.length-1].ask + '<br><span style="color:#0a7d3c">Done &#10003;</span>'
+    : st.ask + `<br><span style="color:${T.color}">Where does corner <b>${LBL[j]}${"'".repeat(si)}</b> go?</span>`;
+
+  document.getElementById('dots').innerHTML = Array.from({length:T.total},(_,i)=>{
+    const L = LBL[i%6] + "'".repeat(Math.floor(i/6)+1);
+    return `<div class="dot ${i<k?'done':''} ${i===k?'now':''}" style="${i<k?`background:${T.color}`:''}">${L}</div>`;
+  }).join('');
+
+  buildTabs(); draw();
+}
+
+window.reveal = ()=>{ revealed = true; refresh(); };
+
+svg.addEventListener('click', e=>{
+  const T = TASKS[cur];
+  if(anim || T.discuss) return;
+  const k = placed[cur].length;
+  if(k >= T.total) return;
+  const pt = svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+  const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+  const c = Math.round((((loc.x-M)/U) + CMIN*H)/H);
+  const n = Math.round((YMAX - (loc.y-M)/U) - c/2);
+  if(c<CMIN||c>CMAX) return;
+  const p = P(c,n);
+  if(p.y<YMIN||p.y>YMAX) return;
+  const t = T.targets[k], L = LBL[k%6] + "'".repeat(stageIdx(k));
+  if(c===t[0] && n===t[1]){
+    placed[cur].push([c,n]); hintLvl = 0;
+    const now = placed[cur].length;
+    fb(now >= T.total ? 'All corners placed. Figure done &#10003;'
+       : now % 6 === 0 ? 'That figure is finished. Now flip it across line y &#10003;'
+       : `Corner ${L} is right &#10003;`, 'good');
+  }else{
+    fb(`Not that dot. Try again for corner ${L}.`, 'bad');
+  }
+  refresh();
+});
+
+document.getElementById('hint').onclick = ()=>{
+  const T = TASKS[cur];
+  if(placed[cur].length >= T.total){ fb('This one is finished.','hint'); return; }
+  hintLvl = Math.min(hintLvl+1, 2);
+  const st = T.stages[stageIdx(placed[cur].length)];
+  fb(hintLvl===1 ? st.hint1 : st.hint2, 'hint');
+  draw();
+};
+
+document.getElementById('reset').onclick = ()=>{
+  placed[cur]=[]; hintLvl=0; anim=null; fb('',''); refresh();
+};
+
+document.getElementById('show').onclick = ()=>{
+  if(anim) return;
+  placed[cur] = []; hintLvl = 0; refresh();
+  fb('Watch the figure move.','hint');
+  runStage(0);
+};
+
+function runStage(i){
+  const T = TASKS[cur], st = T.stages[i];
+  const t0 = performance.now(), dur = 1900;
+  (function step(now){
+    const u = Math.min(1,(now-t0)/dur);
+    const e = u<0.5 ? 2*u*u : 1-Math.pow(-2*u+2,2)/2;
+    anim = st.src.map(p=>{
+      if(st.kind==='trans'){ const q=st.f(p); return {x:p.x+(q.x-p.x)*e, y:p.y+(q.y-p.y)*e}; }
+      const f = st.foot(p), s = 1-2*e;
+      return {x:f.x+(p.x-f.x)*s, y:f.y+(p.y-f.y)*s};
+    });
+    draw();
+    if(u<1){ requestAnimationFrame(step); return; }
+    anim = null;
+    placed[cur] = T.targets.slice(0,(i+1)*6).map(t=>[t[0],t[1]]);
+    refresh();
+    if(i+1 < T.stages.length) setTimeout(()=>runStage(i+1), 500);
+    else fb('That is the answer. Press "Start over" to try it yourself.','good');
+  })(t0);
+}
+
+refresh();
+</script>
+</body>
+</html>
