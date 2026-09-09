@@ -1,0 +1,64 @@
+/* =====================================================================
+   Shared dark theme. Every page links to this one file.
+   Change a color here and all pages change together.
+   ===================================================================== */
+:root{
+  --ink:#0B1220;      /* page background        */
+  --band:#111A2B;     /* banner + card surface  */
+  --rule:#24324A;     /* borders                */
+  --chalk:#E8EDF7;    /* main text              */
+  --dim:#8FA0BC;      /* secondary text         */
+  --graphite:#86B0EA; /* links, hover           */
+  --ochre:#E3B667;    /* accent labels          */
+  --sans:"Public Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  --display:"Familjen Grotesk","Public Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--ink);color:var(--chalk);font-family:var(--sans);
+  font-size:17px;line-height:1.6}
+
+/* ---------- banner ---------- */
+.banner{background:var(--band);border-bottom:1px solid var(--rule)}
+.banner .inner{max-width:1060px;margin:0 auto;padding:48px 24px}
+.banner h1{font-family:var(--display);font-weight:700;
+  font-size:clamp(1.9rem,4.6vw,2.6rem);line-height:1.05;letter-spacing:-.02em;margin:0}
+.banner .eyebrow{font-family:var(--display);font-weight:700;font-size:.85rem;
+  color:var(--ochre);display:block;margin-bottom:8px}
+
+/* ---------- page body ---------- */
+main{max-width:1060px;margin:0 auto;padding:36px 24px 90px}
+
+/* ---------- back link (subpages) ---------- */
+.back{display:inline-flex;align-items:center;gap:7px;color:var(--dim);
+  text-decoration:none;font-size:.94rem;margin-bottom:28px}
+.back:hover,.back:focus-visible{color:var(--chalk)}
+
+/* ---------- card grid (landing page) ---------- */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+a.card{background:var(--band);border:1px solid var(--rule);border-radius:12px;
+  padding:26px 24px;min-height:132px;display:flex;align-items:center;
+  text-decoration:none;color:inherit;
+  font-family:var(--display);font-weight:500;font-size:1.15rem;line-height:1.35;
+  letter-spacing:-.01em}
+a.card:hover,a.card:focus-visible{border-color:var(--graphite);background:#152036;
+  color:var(--graphite)}
+a.card:focus-visible{outline:2px solid var(--graphite);outline-offset:3px}
+
+/* ---------- sections and links (subpages) ---------- */
+h2{font-family:var(--display);font-weight:500;font-size:1.1rem;color:var(--ochre);
+  margin:26px 0 6px}
+h2:first-of-type{margin-top:0}
+p{margin:0}
+a{color:var(--graphite);text-decoration:none;
+  border-bottom:1px solid rgba(134,176,234,.4);padding-bottom:1px}
+a:hover,a:focus-visible{color:var(--chalk);border-bottom-color:var(--chalk)}
+a:focus-visible{outline:2px solid var(--graphite);outline-offset:4px}
+.pending{color:var(--dim)}
+
+@media (max-width:900px){ .grid{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:600px){
+  .grid{grid-template-columns:1fr}
+  .banner .inner{padding:34px 24px}
+  a.card{min-height:0}
+}

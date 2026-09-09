@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perpendicular bisector — Unit 1A</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=Public+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1220;--panel:#111A2B;--panel-2:#16223a;--rule:#24324A;
+    --chalk:#E8EDF7;--dim:#8FA0BC;--graphite:#86B0EA;--ochre:#E3B667;
+    --sans:"Public Sans",system-ui,sans-serif;
+    --display:"Familjen Grotesk","Public Sans",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--ink);color:var(--chalk);font-family:var(--sans);
+    display:flex;flex-direction:column;min-height:100%}
+
+  .topbar{display:flex;align-items:center;gap:18px;padding:14px 22px;
+    border-bottom:1px solid var(--rule)}
+  .back{color:var(--dim);text-decoration:none;font-size:.94rem;
+    display:inline-flex;align-items:center;gap:7px}
+  .back:hover,.back:focus-visible{color:var(--chalk)}
+  .topbar h1{font-family:var(--display);font-weight:500;font-size:1.05rem;margin:0}
+  .tag{font-family:var(--display);font-size:.8rem;color:var(--ochre);
+    border:1px solid var(--ochre);border-radius:4px;padding:1px 8px}
+
+  .stage{flex:1;display:grid;grid-template-columns:1fr 340px}
+  .board{padding:18px 22px;display:flex;align-items:center;justify-content:center;
+    background-image:
+      linear-gradient(rgba(134,176,234,.05) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(134,176,234,.05) 1px,transparent 1px);
+    background-size:30px 30px}
+  svg{width:100%;height:auto;max-height:74vh}
+
+  .panel{border-left:1px solid var(--rule);background:var(--panel);
+    padding:22px;display:flex;flex-direction:column;gap:18px}
+  .stepno{font-family:var(--display);font-weight:700;font-size:.85rem;color:var(--graphite)}
+  .caption{font-size:1rem;line-height:1.5;margin:6px 0 0;min-height:5.4em}
+  .why{background:var(--panel-2);border:1px solid var(--rule);border-radius:8px;
+    padding:12px 14px;font-size:.9rem;color:var(--dim);line-height:1.5}
+
+  label{display:block;font-size:.9rem;color:var(--dim);margin-bottom:8px}
+  input[type=range]{width:100%;accent-color:#86B0EA}
+  .radline{font-family:var(--display);font-size:.9rem;color:var(--chalk);margin-top:8px}
+  .warn{color:var(--ochre)}
+  .locked{opacity:.45}
+
+  .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto}
+  button{font-family:var(--display);font-weight:500;font-size:.95rem;
+    background:var(--panel-2);color:var(--chalk);border:1px solid var(--rule);
+    border-radius:8px;padding:10px 16px;cursor:pointer}
+  button:hover:not(:disabled){border-color:var(--graphite)}
+  button:disabled{opacity:.4;cursor:default}
+  button.primary{background:var(--graphite);color:#0B1220;border-color:var(--graphite);font-weight:700}
+  button:focus-visible{outline:2px solid var(--graphite);outline-offset:2px}
+
+  @media (max-width:900px){
+    .stage{grid-template-columns:1fr}
+    .panel{border-left:0;border-top:1px solid var(--rule)}
+    svg{max-height:52vh}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back" href="../index.html">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M10 2L4 7l6 5" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round"/></svg>
+    All simulations</a>
+  <span class="tag">Unit 1 · A</span>
+  <h1>Construct the perpendicular bisector of a segment</h1>
+</div>
+
+<div class="stage">
+  <div class="board">
+    <svg id="art" viewBox="0 0 860 520" role="img"
+         aria-label="Compass and straightedge construction of a perpendicular bisector">
+      <g id="given" fill="none" stroke-linecap="round">
+        <path d="M230 330 H630" stroke="#E8EDF7" stroke-width="2.5"/>
+        <circle cx="230" cy="330" r="5" fill="#E8EDF7" stroke="none"/>
+        <circle cx="630" cy="330" r="5" fill="#E8EDF7" stroke="none"/>
+      </g>
+      <text x="216" y="360" fill="#8FA0BC" font-size="19"
+            font-family="Familjen Grotesk, sans-serif">A</text>
+      <text x="622" y="360" fill="#8FA0BC" font-size="19"
+            font-family="Familjen Grotesk, sans-serif">B</text>
+      <path id="guide" fill="none" stroke="#8FA0BC" stroke-width="1.5"
+            stroke-dasharray="5 6"/>
+      <g id="marks" fill="none" stroke-linecap="round"></g>
+      <g id="labels"></g>
+    </svg>
+  </div>
+
+  <aside class="panel">
+    <div>
+      <div class="stepno" id="stepno">Step 0 of 7</div>
+      <p class="caption" id="caption"></p>
+    </div>
+
+    <div id="radiusbox">
+      <label for="radius">Compass width</label>
+      <input id="radius" type="range" min="150" max="380" value="280" step="5">
+      <div class="radline" id="radline"></div>
+    </div>
+
+    <div class="why" id="why">
+      Half of AB is 200 pixels on this board. Any compass width larger than that works.
+    </div>
+
+    <div class="btns">
+      <button id="back" disabled>Back</button>
+      <button id="next" class="primary">Next mark</button>
+      <button id="play">Play all</button>
+      <button id="reset">Start over</button>
+    </div>
+  </aside>
+</div>
+
+<script>
+const A = {x:230, y:330}, B = {x:630, y:330};
+const HALF = (B.x - A.x) / 2;          // 200
+const M    = {x:(A.x+B.x)/2, y:A.y};
+
+const marksG  = document.getElementById("marks");
+const labelsG = document.getElementById("labels");
+const guide   = document.getElementById("guide");
+const radius  = document.getElementById("radius");
+const radline = document.getElementById("radline");
+const radiusbox = document.getElementById("radiusbox");
+
+let r = +radius.value;
+let step = 0;
+let playing = false;
+const SVGNS = "http://www.w3.org/2000/svg";
+const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function h(){ return Math.sqrt(Math.max(r*r - HALF*HALF, 0)); }
+function P(){ return {x:M.x, y:M.y - h()}; }
+function Q(){ return {x:M.x, y:M.y + h()}; }
+
+function arcPath(c, dir){
+  const th = Math.atan2(h(), HALF) + 0.40;
+  const x1 = c.x + dir*r*Math.cos(th), y1 = c.y - r*Math.sin(th);
+  const x2 = c.x + dir*r*Math.cos(th), y2 = c.y + r*Math.sin(th);
+  return "M"+x1+" "+y1+" A"+r+" "+r+" 0 0 "+(dir>0?1:0)+" "+x2+" "+y2;
+}
+
+/* draw one element, animated along its own length */
+function stroke(d, color, width){
+  const p = document.createElementNS(SVGNS,"path");
+  p.setAttribute("d", d);
+  p.setAttribute("stroke", color);
+  p.setAttribute("stroke-width", width);
+  p.setAttribute("fill","none");
+  marksG.appendChild(p);
+  if (!reduce){
+    const L = p.getTotalLength();
+    p.style.strokeDasharray = L;
+    p.style.strokeDashoffset = L;
+    p.getBoundingClientRect();               // force layout
+    p.style.transition = "stroke-dashoffset 650ms ease-in-out";
+    p.style.strokeDashoffset = 0;
+  }
+  return p;
+}
+function dot(pt, color, name){
+  const c = document.createElementNS(SVGNS,"circle");
+  c.setAttribute("cx",pt.x); c.setAttribute("cy",pt.y);
+  c.setAttribute("r",5.5); c.setAttribute("fill",color);
+  marksG.appendChild(c);
+  if (name){
+    const t = document.createElementNS(SVGNS,"text");
+    t.setAttribute("x", pt.x + 12);
+    t.setAttribute("y", pt.y + (name==="Q" ? 22 : -10));
+    t.setAttribute("fill","#8FA0BC");
+    t.setAttribute("font-size","19");
+    t.setAttribute("font-family","Familjen Grotesk, sans-serif");
+    t.textContent = name;
+    labelsG.appendChild(t);
+  }
+}
+
+/* ---- one entry = one mark on the board ---- */
+const STEPS = [
+  { text:"Given: segment AB. Set the compass wider than half of AB, then start.", draw:null },
+  { text:"Put the compass point on A. Draw one arc that crosses above and below the segment.",
+    draw:()=> stroke(arcPath(A, 1), "#E3B667", 2.2) },
+  { text:"Keep the compass at the same width. Put the point on B and draw the second arc.",
+    draw:()=> stroke(arcPath(B, -1), "#E3B667", 2.2) },
+  { text:"Mark point P where the two arcs cross above the segment.",
+    draw:()=> dot(P(), "#E3B667", "P") },
+  { text:"Mark point Q where the two arcs cross below the segment.",
+    draw:()=> dot(Q(), "#E3B667", "Q") },
+  { text:"Line up the straightedge on P and Q. Draw line PQ.",
+    draw:()=> stroke("M"+P().x+" "+(P().y-40)+" L"+Q().x+" "+(Q().y+40), "#86B0EA", 2.6) },
+  { text:"Line PQ crosses AB at point M. M is the midpoint: AM and MB are equal.",
+    draw:()=> dot(M, "#86B0EA", "M") },
+  { text:"Mark the right angle at M. Line PQ is the perpendicular bisector of AB.",
+    draw:()=> stroke("M"+(M.x-18)+" "+(M.y-18)+" H"+(M.x)+" M"+(M.x-18)+" "+(M.y-18)+" V"+(M.y),
+                     "#86B0EA", 2) }
+];
+
+const WHY = {
+  0:"Half of AB is 200 pixels on this board. Any compass width larger than that works.",
+  1:"The arc is every point that is this same distance from A.",
+  2:"Same width means every point on this arc is that same distance from B.",
+  3:"P is on both arcs, so P is the same distance from A as it is from B.",
+  4:"Q is on both arcs too, so Q is also the same distance from A as from B.",
+  5:"Two points that are equally far from A and B determine the whole line of such points.",
+  6:"M is on that line, so AM equals MB. That is why AB is bisected.",
+  7:"Every point of line PQ is equally far from A and from B, so PQ meets AB at a right angle."
+};
+
+function redrawGuide(){
+  if (step === 0){
+    const ang = Math.atan2(h(), HALF) || 0.6;
+    guide.setAttribute("d","M"+A.x+" "+A.y+" L"+(A.x + r*Math.cos(-ang))+" "+(A.y + r*Math.sin(-ang)));
+    guide.style.display = "";
+  } else {
+    guide.style.display = "none";
+  }
+}
+
+function radiusText(){
+  if (r <= HALF){
+    radline.innerHTML = '<span class="warn">Width ' + r +
+      ' — too small. The arcs will not cross. Needs more than 200.</span>';
+  } else {
+    radline.textContent = "Width " + r + " (more than half of AB, which is 200). Arcs will cross.";
+  }
+}
+
+function render(){
+  document.getElementById("stepno").textContent = "Step " + step + " of 7";
+  document.getElementById("caption").textContent = STEPS[step].text;
+  document.getElementById("why").textContent = WHY[step];
+  document.getElementById("back").disabled = step === 0 || playing;
+  document.getElementById("next").disabled = step === STEPS.length - 1 || r <= HALF || playing;
+  document.getElementById("play").disabled = playing;
+  radius.disabled = step > 0;
+  radiusbox.classList.toggle("locked", step > 0);
+  radiusText();
+  redrawGuide();
+}
+
+function rebuildTo(n){
+  marksG.innerHTML = ""; labelsG.innerHTML = "";
+  for (let i = 1; i <= n; i++){ if (STEPS[i].draw) STEPS[i].draw(); }
+  step = n; render();
+}
+
+document.getElementById("next").onclick = ()=>{
+  if (step >= STEPS.length - 1) return;
+  step++;
+  if (STEPS[step].draw) STEPS[step].draw();   // exactly one mark
+  render();
+};
+document.getElementById("back").onclick = ()=> rebuildTo(Math.max(0, step - 1));
+document.getElementById("reset").onclick = ()=>{ playing = false; rebuildTo(0); };
+
+document.getElementById("play").onclick = ()=>{
+  if (r <= HALF) return;
+  rebuildTo(0);
+  playing = true; render();
+  const tick = ()=>{
+    if (!playing) return;
+    if (step >= STEPS.length - 1){ playing = false; render(); return; }
+    step++;
+    if (STEPS[step].draw) STEPS[step].draw();
+    render();
+    document.getElementById("next").disabled = true;
+    setTimeout(tick, 1400);
+  };
+  setTimeout(tick, 300);
+};
+
+radius.oninput = ()=>{ r = +radius.value; render(); };
+
+render();
+</script>
+</body>
+</html>

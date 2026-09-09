@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit 4 Right Triangle Trigonometry — Mr. Hua</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=Public+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<div class="banner">
+  <div class="inner">
+    <span class="eyebrow">Unit 4</span>
+    <h1>Right Triangle Trigonometry</h1>
+  </div>
+</div>
+
+<main>
+  <a class="back" href="../index.html">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M10 2L4 7l6 5" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round"/></svg>
+    All units</a>
+
+  <div id="sections"></div>
+</main>
+
+<script>
+/* =====================================================================
+   EDIT THIS LIST.
+   One object per section. Fill in "link" with the simulation address.
+   An empty link shows as plain grey text.
+   ===================================================================== */
+const SECTIONS = [
+
+];
+/* ===================================================================== */
+
+const box = document.getElementById("sections");
+
+if (SECTIONS.length === 0) {
+  const p = document.createElement("p");
+  p.className = "pending";
+  p.textContent = "Simulations coming soon.";
+  box.appendChild(p);
+} else {
+  SECTIONS.forEach(s => {
+    const h2 = document.createElement("h2");
+    h2.textContent = "Section " + s.letter;
+    box.appendChild(h2);
+
+    const p = document.createElement("p");
+    if (typeof s.link === "string" && s.link.trim() !== "") {
+      const a = document.createElement("a");
+      a.href = s.link;
+      a.textContent = s.text;
+      p.appendChild(a);
+    } else {
+      p.className = "pending";
+      p.textContent = s.text;
+    }
+    box.appendChild(p);
+  });
+}
+</script>
+</body>
+</html>

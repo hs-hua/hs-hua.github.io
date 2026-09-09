@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rigid transformations — Unit 1B</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=Public+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1220;--panel:#111A2B;--panel-2:#16223a;--rule:#24324A;
+    --chalk:#E8EDF7;--dim:#8FA0BC;--graphite:#86B0EA;--ochre:#E3B667;
+    --sans:"Public Sans",system-ui,sans-serif;
+    --display:"Familjen Grotesk","Public Sans",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--ink);color:var(--chalk);font-family:var(--sans);
+    display:flex;flex-direction:column;min-height:100%}
+  .topbar{display:flex;align-items:center;gap:18px;padding:14px 22px;border-bottom:1px solid var(--rule)}
+  .back{color:var(--dim);text-decoration:none;font-size:.94rem;display:inline-flex;align-items:center;gap:7px}
+  .back:hover,.back:focus-visible{color:var(--chalk)}
+  .topbar h1{font-family:var(--display);font-weight:500;font-size:1.05rem;margin:0}
+  .tag{font-family:var(--display);font-size:.8rem;color:var(--ochre);border:1px solid var(--ochre);
+       border-radius:4px;padding:1px 8px}
+
+  .stage{flex:1;display:grid;grid-template-columns:1fr 340px}
+  .board{padding:14px 20px;display:flex;align-items:center;justify-content:center}
+  svg{width:100%;height:auto;max-height:76vh}
+
+  .panel{border-left:1px solid var(--rule);background:var(--panel);padding:22px;
+    display:flex;flex-direction:column;gap:16px}
+  .seg{display:flex;gap:6px}
+  .seg button{flex:1}
+  label{display:block;font-size:.88rem;color:var(--dim);margin:0 0 6px}
+  input[type=range]{width:100%;accent-color:#86B0EA}
+  .val{font-family:var(--display);font-size:.9rem;color:var(--chalk)}
+  .why{background:var(--panel-2);border:1px solid var(--rule);border-radius:8px;
+    padding:12px 14px;font-size:.9rem;color:var(--dim);line-height:1.5}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th,td{text-align:left;padding:5px 0;border-bottom:1px solid var(--rule)}
+  th{color:var(--dim);font-weight:600}
+  td.num{font-family:var(--display);color:var(--chalk)}
+  button{font-family:var(--display);font-weight:500;font-size:.93rem;background:var(--panel-2);
+    color:var(--chalk);border:1px solid var(--rule);border-radius:8px;padding:9px 14px;cursor:pointer}
+  button:hover{border-color:var(--graphite)}
+  button[aria-pressed=true]{background:var(--graphite);color:#0B1220;border-color:var(--graphite);font-weight:700}
+  button:focus-visible{outline:2px solid var(--graphite);outline-offset:2px}
+  .btns{display:flex;gap:8px;margin-top:auto}
+  .btns button{flex:1}
+  .go{background:var(--graphite);color:#0B1220;border-color:var(--graphite);font-weight:700}
+  @media (max-width:900px){
+    .stage{grid-template-columns:1fr}
+    .panel{border-left:0;border-top:1px solid var(--rule)}
+    svg{max-height:50vh}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back" href="../index.html">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M10 2L4 7l6 5" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round"/></svg>
+    All simulations</a>
+  <span class="tag">Unit 1 · B</span>
+  <h1>Translate, rotate, and reflect a triangle</h1>
+</div>
+
+<div class="stage">
+  <div class="board">
+    <svg id="art" viewBox="0 0 700 520" role="img"
+         aria-label="Coordinate plane with a triangle and its image after a rigid transformation">
+      <g id="grid"></g>
+      <g id="mirror"></g>
+      <polygon id="pre" fill="rgba(232,237,247,.07)" stroke="#E8EDF7" stroke-width="2.2"/>
+      <polygon id="img" fill="rgba(134,176,234,.16)" stroke="#86B0EA" stroke-width="2.6"/>
+      <g id="labels"></g>
+    </svg>
+  </div>
+
+  <aside class="panel">
+    <div class="seg" role="group" aria-label="Transformation">
+      <button data-mode="translate" aria-pressed="true">Translate</button>
+      <button data-mode="rotate" aria-pressed="false">Rotate</button>
+      <button data-mode="reflect" aria-pressed="false">Reflect</button>
+    </div>
+
+    <div id="controls"></div>
+
+    <div class="why" id="why"></div>
+
+    <table>
+      <tr><th>Side</th><th>Original</th><th>Image</th></tr>
+      <tr><td>AB</td><td class="num" id="ab0"></td><td class="num" id="ab1"></td></tr>
+      <tr><td>BC</td><td class="num" id="bc0"></td><td class="num" id="bc1"></td></tr>
+      <tr><td>CA</td><td class="num" id="ca0"></td><td class="num" id="ca1"></td></tr>
+    </table>
+
+    <div class="btns">
+      <button class="go" id="animate">Animate the move</button>
+      <button id="reset">Reset</button>
+    </div>
+  </aside>
+</div>
+
+<script>
+const U = 38, OX = 350, OY = 250;              // pixels per unit, origin
+const gx = x => OX + x*U, gy = y => OY - y*U;
+
+const PRE = [{x:-5,y:1,n:"A"},{x:-1,y:1,n:"B"},{x:-4,y:4,n:"C"}];
+let mode = "translate";
+let p = { dx:6, dy:-3, angle:90, line:"x" };
+let t = 1;                                     // 0 = start, 1 = finished
+let anim = null;
+
+/* ---------- grid ---------- */
+(function(){
+  const g = document.getElementById("grid");
+  let s = "";
+  for (let x=-9; x<=9; x++)
+    s += '<line x1="'+gx(x)+'" y1="0" x2="'+gx(x)+'" y2="520" stroke="#1b2942" stroke-width="1"/>';
+  for (let y=-6; y<=7; y++)
+    s += '<line x1="0" y1="'+gy(y)+'" x2="700" y2="'+gy(y)+'" stroke="#1b2942" stroke-width="1"/>';
+  s += '<line x1="0" y1="'+gy(0)+'" x2="700" y2="'+gy(0)+'" stroke="#3b4a68" stroke-width="1.6"/>';
+  s += '<line x1="'+gx(0)+'" y1="0" x2="'+gx(0)+'" y2="520" stroke="#3b4a68" stroke-width="1.6"/>';
+  g.innerHTML = s;
+})();
+
+/* ---------- transformations ---------- */
+function move(pt, frac){
+  if (mode === "translate")
+    return { x: pt.x + p.dx*frac, y: pt.y + p.dy*frac };
+  if (mode === "rotate"){
+    const a = p.angle * frac * Math.PI/180;
+    return { x: pt.x*Math.cos(a) - pt.y*Math.sin(a),
+             y: pt.x*Math.sin(a) + pt.y*Math.cos(a) };
+  }
+  let m;
+  if (p.line === "x") m = { x: pt.x, y: -pt.y };
+  else if (p.line === "y") m = { x: -pt.x, y: pt.y };
+  else m = { x: pt.y, y: pt.x };
+  return { x: pt.x + (m.x - pt.x)*frac, y: pt.y + (m.y - pt.y)*frac };
+}
+
+const dist = (a,b) => Math.hypot(a.x-b.x, a.y-b.y).toFixed(2);
+
+function draw(){
+  const now = PRE.map(q => move(q, t));
+
+  document.getElementById("pre").setAttribute("points",
+    PRE.map(q => gx(q.x)+","+gy(q.y)).join(" "));
+  document.getElementById("img").setAttribute("points",
+    now.map(q => gx(q.x)+","+gy(q.y)).join(" "));
+
+  let L = "";
+  PRE.forEach(q => { L += '<text x="'+(gx(q.x)-16)+'" y="'+(gy(q.y)+22)+'" fill="#8FA0BC" '+
+    'font-size="17" font-family="Familjen Grotesk, sans-serif">'+q.n+'</text>'; });
+  now.forEach((q,i) => { L += '<text x="'+(gx(q.x)+9)+'" y="'+(gy(q.y)-9)+'" fill="#86B0EA" '+
+    'font-size="17" font-family="Familjen Grotesk, sans-serif">'+PRE[i].n+"'</text>"; });
+  document.getElementById("labels").innerHTML = L;
+
+  let mline = "";
+  if (mode === "reflect"){
+    const d = p.line === "x" ? "M0 "+gy(0)+" H700"
+            : p.line === "y" ? "M"+gx(0)+" 0 V520"
+            : "M"+gx(-6)+" "+gy(-6)+" L"+gx(6)+" "+gy(6);
+    mline = '<path d="'+d+'" stroke="#E3B667" stroke-width="2" stroke-dasharray="7 7" fill="none"/>';
+  }
+  if (mode === "rotate")
+    mline = '<circle cx="'+gx(0)+'" cy="'+gy(0)+'" r="5" fill="#E3B667"/>';
+  document.getElementById("mirror").innerHTML = mline;
+
+  const end = PRE.map(q => move(q, 1));
+  ab0.textContent = dist(PRE[0],PRE[1]); ab1.textContent = dist(end[0],end[1]);
+  bc0.textContent = dist(PRE[1],PRE[2]); bc1.textContent = dist(end[1],end[2]);
+  ca0.textContent = dist(PRE[2],PRE[0]); ca1.textContent = dist(end[2],end[0]);
+}
+
+/* ---------- control panel ---------- */
+function controls(){
+  const c = document.getElementById("controls");
+  const why = document.getElementById("why");
+  if (mode === "translate"){
+    c.innerHTML =
+      '<label for="dx">Move right or left</label><input id="dx" type="range" min="-8" max="8" value="'+p.dx+'">'+
+      '<div class="val" id="dxv"></div>'+
+      '<label for="dy" style="margin-top:12px">Move up or down</label><input id="dy" type="range" min="-6" max="6" value="'+p.dy+'">'+
+      '<div class="val" id="dyv"></div>';
+    const upd = ()=>{ dxv.textContent = "Right "+p.dx+" units"; dyv.textContent = "Up "+p.dy+" units"; };
+    dx.oninput = e=>{ p.dx = +e.target.value; upd(); draw(); };
+    dy.oninput = e=>{ p.dy = +e.target.value; upd(); draw(); };
+    upd();
+    why.textContent = "Every vertex slides the same distance in the same direction. Nothing turns or flips.";
+  }
+  if (mode === "rotate"){
+    c.innerHTML =
+      '<label for="ang">Turn about the origin</label>'+
+      '<input id="ang" type="range" min="-180" max="180" step="15" value="'+p.angle+'">'+
+      '<div class="val" id="angv"></div>';
+    const upd = ()=>{ angv.textContent = p.angle + "° (" +
+      (p.angle >= 0 ? "counterclockwise" : "clockwise") + ")"; };
+    ang.oninput = e=>{ p.angle = +e.target.value; upd(); draw(); };
+    upd();
+    why.textContent = "Each vertex stays the same distance from the origin, so the triangle turns without changing size.";
+  }
+  if (mode === "reflect"){
+    c.innerHTML =
+      '<label>Mirror line</label><div class="seg">'+
+      '<button data-line="x">x-axis</button><button data-line="y">y-axis</button>'+
+      '<button data-line="d">y = x</button></div>';
+    c.querySelectorAll("[data-line]").forEach(b=>{
+      b.setAttribute("aria-pressed", b.dataset.line === p.line);
+      b.onclick = ()=>{
+        p.line = b.dataset.line;
+        c.querySelectorAll("[data-line]").forEach(o =>
+          o.setAttribute("aria-pressed", o.dataset.line === p.line));
+        draw();
+      };
+    });
+    why.textContent = "Each vertex crosses the dashed line and lands the same distance on the other side.";
+  }
+}
+
+document.querySelectorAll("[data-mode]").forEach(b=>{
+  b.onclick = ()=>{
+    mode = b.dataset.mode;
+    document.querySelectorAll("[data-mode]").forEach(o =>
+      o.setAttribute("aria-pressed", o.dataset.mode === mode));
+    t = 1; controls(); draw();
+  };
+});
+
+document.getElementById("animate").onclick = ()=>{
+  cancelAnimationFrame(anim);
+  const start = performance.now(), dur = 1600;
+  const tick = now => {
+    const k = Math.min((now - start)/dur, 1);
+    t = k < .5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2)/2;   // ease in-out
+    draw();
+    if (k < 1) anim = requestAnimationFrame(tick);
+  };
+  t = 0; draw();
+  anim = requestAnimationFrame(tick);
+};
+document.getElementById("reset").onclick = ()=>{
+  cancelAnimationFrame(anim); t = 0; draw();
+};
+
+controls(); draw();
+</script>
+</body>
+</html>
