@@ -1,1 +1,90 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spinning Point</title>
+<style>
+  body{font-family:'Comic Sans MS',cursive,sans-serif;background:linear-gradient(45deg,#FFB6C1,#87CEEB);margin:0;padding:16px;text-align:center}
+  .box{background:#fff;border-radius:20px;padding:20px;max-width:520px;margin:0 auto;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+  h1{color:#FF6B6B;margin:0 0 10px;font-size:1.8em}
+  svg{background:#F0F8FF;border:3px solid #4169E1;border-radius:15px;touch-action:none}
+  .readout{font-size:1.4em;color:#2F4F4F;margin:10px 0;font-weight:bold}
+  button{background:#FF69B4;color:#fff;border:0;padding:12px 18px;font-size:16px;border-radius:10px;margin:4px;cursor:pointer;font-family:inherit}
+  button:active{transform:scale(.95)}
+  .key{background:#E6E6FA;border-radius:12px;padding:12px;font-size:15px;color:#2F4F4F;margin-top:12px;text-align:left}
+  input[type=range]{width:90%;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="box">
+  <svg id="svg" viewBox="0 0 400 400" width="360" height="360">
+    <circle cx="200" cy="200" r="100" fill="none" stroke="#FFD700" stroke-width="2" stroke-dasharray="6 8"/>
+    <line id="arm0" x1="200" y1="200" x2="300" y2="200" stroke="#bbb" stroke-width="3"/>
+    <path id="trail" fill="none" stroke="#32CD32" stroke-width="7" stroke-linecap="round" opacity=".55"/>
+    <line id="arm" x1="200" y1="200" x2="300" y2="200" stroke="#4169E1" stroke-width="4"/>
+    <circle id="start" cx="300" cy="200" r="7" fill="#fff" stroke="#888" stroke-width="3"/>
+    <circle id="pt" cx="300" cy="200" r="10" fill="#32CD32" stroke="#fff" stroke-width="3"/>
+    <circle cx="200" cy="200" r="11" fill="#FF4500" stroke="#fff" stroke-width="3"/>
+    <text x="200" y="232" text-anchor="middle" font-size="14" fill="#FF4500" font-weight="bold">center</text>
+  </svg>
+
+  <div class="readout" id="deg">0°</div>
+  <input type="range" id="slider" min="0" max="360" value="0">
+  <div>
+    <button onclick="go(90)">+90°</button>
+    <button onclick="go(180)">+180°</button>
+    <button onclick="go(360)">Full circle</button>
+    <button onclick="reset()">Start over</button>
+  </div>
+</div>
+
+<script>
+const C = {x:200, y:200}, R = 100;
+const pt = document.getElementById('pt'), trail = document.getElementById('trail'),
+      arm = document.getElementById('arm'), degEl = document.getElementById('deg'),
+      slider = document.getElementById('slider');
+let angle = 0, timer = null;
+
+// counter-clockwise on screen (screen y points down, so we negate)
+function posAt(a){
+  const r = a * Math.PI / 180;
+  return {x: C.x + R*Math.cos(r), y: C.y - R*Math.sin(r)};
+}
+
+function draw(a){
+  const p = posAt(a);
+  pt.setAttribute('cx', p.x); pt.setAttribute('cy', p.y);
+  arm.setAttribute('x2', p.x); arm.setAttribute('y2', p.y);
+  degEl.textContent = Math.round(a) + '°';
+  slider.value = a;
+
+  if (a < 0.01) { trail.setAttribute('d',''); return; }
+  if (a >= 359.99) {                                   // full circle
+    trail.setAttribute('d', `M ${C.x+R} ${C.y} A ${R} ${R} 0 1 0 ${C.x-R} ${C.y} A ${R} ${R} 0 1 0 ${C.x+R} ${C.y}`);
+    return;
+  }
+  const large = a > 180 ? 1 : 0;
+  trail.setAttribute('d', `M ${C.x+R} ${C.y} A ${R} ${R} 0 ${large} 0 ${p.x} ${p.y}`);
+}
+
+function animateTo(target){
+  clearInterval(timer);
+  const start = angle, t0 = performance.now(), dur = 12 * Math.abs(target - start);
+  timer = setInterval(() => {
+    const k = Math.min(1, (performance.now() - t0) / dur);
+    angle = start + (target - start) * k;
+    draw(angle);
+    if (k === 1) { clearInterval(timer); angle = target; }
+  }, 16);
+}
+
+function go(d){ animateTo(Math.min(360, angle + d)); }
+function reset(){ clearInterval(timer); angle = 0; draw(0); }
+slider.addEventListener('input', e => { clearInterval(timer); angle = +e.target.value; draw(angle); });
+
+draw(0);
+</script>
+</body>
+</html>
