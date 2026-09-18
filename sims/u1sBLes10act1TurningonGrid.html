@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rotating a figure with tracing paper</title>
+<style>
+  :root{
+    --ink:#15221f;
+    --paper-bg:#f7f9f6;
+    --grid:#bfe0d6;
+    --grid-hi:#8fcab9;
+    --fig:#16211f;
+    --trace:#d1491f;
+    --image:#1f4fd8;
+    --center:#0f8a52;
+    --sheet:#ffd76a;
+    --panel:#ffffff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper-bg);
+    color:var(--ink);
+    font-family:"Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif;
+    font-size:17px;
+    line-height:1.45;
+    padding:18px 14px 40px;
+  }
+  .wrap{max-width:900px;margin:0 auto}
+  h1{font-size:1.5rem;margin:0 0 4px;font-weight:700;letter-spacing:-.01em}
+  .sub{margin:0 0 16px;color:#4d635d}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .tab{
+    flex:1 1 240px;text-align:left;cursor:pointer;
+    border:2px solid #cddbd6;background:#fff;color:var(--ink);
+    border-radius:10px;padding:10px 12px;font:inherit;font-size:.95rem;
+  }
+  .tab.active{border-color:var(--image);background:#eef3ff;font-weight:700}
+  .stage{
+    background:#fff;border:2px solid #d8e4e0;border-radius:12px;
+    padding:6px;overflow:hidden;
+  }
+  svg{display:block;width:100%;height:auto}
+  .caption{
+    margin-top:12px;background:var(--panel);border:2px solid #d8e4e0;
+    border-left:8px solid var(--image);border-radius:10px;padding:12px 14px;
+    min-height:86px;
+  }
+  .stepnum{font-size:.82rem;color:#5d726c;margin:0 0 4px}
+  .captxt{margin:0;font-size:1.18rem;font-weight:600}
+  .captxt .k{color:var(--image)}
+  .controls{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  button.ctl{
+    cursor:pointer;font:inherit;font-weight:600;border-radius:10px;
+    padding:11px 16px;border:2px solid var(--ink);background:#fff;color:var(--ink);
+  }
+  button.ctl.primary{background:var(--ink);color:#fff}
+  button.ctl:disabled{opacity:.35;cursor:default}
+  .track{height:8px;background:#e3ece9;border-radius:99px;margin-top:12px;overflow:hidden}
+  .fill{height:100%;width:0;background:var(--image);transition:width .25s}
+  @keyframes pop{from{transform:scale(.1);opacity:0}60%{transform:scale(1.45)}to{transform:scale(1);opacity:1}}
+  .pop{transform-box:fill-box;transform-origin:center;animation:pop .45s ease-out}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  .draw{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .55s ease-out forwards}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  .fade{animation:fadein .45s ease-out}
+  @keyframes press{0%{transform:translateY(-46px);opacity:0}55%{transform:translateY(0);opacity:1}70%{transform:translateY(4px)}100%{transform:translateY(0)}}
+  .press{animation:press .6s ease-out}
+  @media (prefers-reduced-motion:reduce){.pop,.draw,.fade,.press{animation:none;stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Rotating a figure with tracing paper</h1>
+  <p class="sub">One mark at a time. Watch the pencil hold the center still.</p>
+
+  <div class="tabs">
+    <button class="tab active" data-p="0">Rotate <i>ABCD</i> 90° clockwise around <i>Q</i></button>
+    <button class="tab" data-p="1">Rotate <i>ABCD</i> 180° around <i>R</i></button>
+  </div>
+
+  <div class="stage"><svg id="svg" viewBox="0 0 800 650" role="img" aria-label="Grid animation of a rotation"></svg></div>
+
+  <div class="caption">
+    <p class="stepnum" id="stepnum">Step 1</p>
+    <p class="captxt" id="caption"></p>
+  </div>
+
+  <div class="controls">
+    <button class="ctl" id="back">Back</button>
+    <button class="ctl primary" id="next">Next step</button>
+    <button class="ctl" id="play">Play all</button>
+    <button class="ctl" id="restart">Start over</button>
+  </div>
+  <div class="track"><div class="fill" id="fill"></div></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- grid ---------- */
+const U=50, XMIN=-9, YMAX=5;            // 16 units wide, 13 tall -> 800 x 650
+const XMAX=7, YMIN=-8;
+const sx=x=>(x-XMIN)*U, sy=y=>(YMAX-y)*U;
+
+/* ---------- the figure from the worksheet ---------- */
+const V=[{n:"A",x:0,y:0},{n:"B",x:3,y:0},{n:"C",x:5,y:3},{n:"D",x:2,y:3}];
+const SIDES=[[0,1],[1,2],[2,3],[3,0]];
+
+const PROBLEMS=[
+  { c:{n:"Q",x:0,y:-1}, other:{n:"R",x:-1,y:0}, deg:90, turn:"" },
+  { c:{n:"R",x:-1,y:0}, other:{n:"Q",x:0,y:-1}, deg:180, turn:"" }
+];
+
+function rot(p,c,deg){
+  const r=-deg*Math.PI/180, co=Math.cos(r), si=Math.sin(r);
+  const dx=p.x-c.x, dy=p.y-c.y;
+  return {n:p.n+"\u2032", x:Math.round((dx*co-dy*si)+c.x), y:Math.round((dx*si+dy*co)+c.y)};
+}
+
+/* ---------- step script ---------- */
+function buildSteps(p){
+  const img=V.map(v=>rot(v,p.c,p.deg));
+  const steps=[];
+  let st={paper:0,dots:0,segs:0,cmark:0,arrow:0,pencil:0,angle:0,arc:0,idots:0,isegs:0,labels:0,hl:0};
+  const add=(text,id)=>steps.push({text,id,state:Object.assign({},st)});
+
+  add("Figure <i>ABCD</i> is drawn on the grid. Points <i>Q</i> and <i>R</i> are marked too.");
+  st.hl=1; add("Point <span class='k'>"+p.c.n+"</span> is the center of rotation. This point never moves.","center");
+  st.hl=0; st.paper=1; st.dots=4; st.segs=4; st.cmark=1; st.arrow=1;
+  add("The tracing is already done. The figure, the letters <i>A B C D</i>, point <i>"+p.c.n+"</i>, and one arrow pointing up are all copied onto the paper, sitting right on top.","paper");
+  st.pencil=1; add("Stand your pencil point on <span class='k'>"+p.c.n+"</span> and press down. The paper spins around this point.","pencil");
+  st.angle=p.deg; st.arc=1; add(p.turn,null);
+  st.pencil=0; st.arrow=0; st.arc=0;
+  V.forEach((v,i)=>{ st.idots=i+1; add("Put a dot at <i>"+img[i].n+"</i>.","id"+i); });
+  SIDES.forEach((s,i)=>{
+    st.isegs=i+1;
+    if(i===SIDES.length-1){ st.paper=0; st.labels=1; }
+    add("Connect <i>"+img[s[0]].n+"</i> to <i>"+img[s[1]].n+"</i>.","is"+i);
+  });
+
+  return {steps:steps, img:img};
+}
+
+/* ---------- drawing helpers ---------- */
+function esc(s){return s;}
+function dot(x,y,r,fill,id,stroke){
+  return '<circle id="'+id+'" cx="'+sx(x)+'" cy="'+sy(y)+'" r="'+r+'" fill="'+fill+'"'+
+         (stroke?' stroke="'+stroke+'" stroke-width="2.5"':'')+'/>';
+}
+function seg(p1,p2,color,w,id){
+  return '<line id="'+id+'" pathLength="1" x1="'+sx(p1.x)+'" y1="'+sy(p1.y)+'" x2="'+sx(p2.x)+'" y2="'+sy(p2.y)+
+         '" stroke="'+color+'" stroke-width="'+w+'" stroke-linecap="round"/>';
+}
+function label(text,x,y,cx,cy,color,size,id){
+  let dx=x-cx, dy=y-cy, m=Math.hypot(dx,dy)||1;
+  const off=0.62;
+  const lx=sx(x+off*dx/m), ly=sy(y+off*dy/m);
+  return '<text id="'+(id||'')+'" x="'+lx+'" y="'+(ly+ (dy<0?9:3))+'" text-anchor="middle" fill="'+color+
+         '" font-size="'+size+'" font-weight="700" font-style="italic" font-family="Georgia,serif">'+text+'</text>';
+}
+function pencil(x,y){
+  const px=sx(x), py=sy(y);
+  // tip is local (0,0); the wrapper group carries the reveal animation so the
+  // placement transform below is never overridden.
+  return '<g id="pencil"><g transform="translate('+px+','+py+') rotate(28)">'+
+    '<polygon points="0,0 -7,-15 7,-15" fill="#3a2b16"/>'+
+    '<polygon points="-7,-15 7,-15 7,-23 -7,-23" fill="#f3dcb0"/>'+
+    '<rect x="-7" y="-84" width="14" height="61" fill="#f2b93c" stroke="#c98f18" stroke-width="1.5"/>'+
+    '<rect x="-2.5" y="-84" width="5" height="61" fill="#e0a423"/>'+
+    '<rect x="-7" y="-95" width="14" height="11" fill="#b9c2c7"/>'+
+    '<rect x="-7" y="-106" width="14" height="11" rx="4" fill="#ef8fa3"/>'+
+    '</g></g>'+
+    '<circle cx="'+px+'" cy="'+py+'" r="13" fill="none" stroke="var(--center)" stroke-width="2.5" stroke-dasharray="4 4" opacity=".85"/>';
+}
+function arrow(c,dx,dy,color,marker,width,dash){
+  return '<line x1="'+sx(c.x)+'" y1="'+sy(c.y)+'" x2="'+sx(c.x+dx)+'" y2="'+sy(c.y+dy)+
+         '" stroke="'+color+'" stroke-width="'+width+'" stroke-linecap="round"'+
+         (dash?' stroke-dasharray="6 6"':'')+' marker-end="url(#'+marker+')"/>';
+}
+function arcPath(from,to,c,deg){
+  const r=Math.hypot(from.x-c.x,from.y-c.y)*U;
+  if(r<1) return "";
+  const large = deg>180?1:0;
+  return '<path d="M '+sx(from.x)+' '+sy(from.y)+' A '+r+' '+r+' 0 '+large+' 1 '+sx(to.x)+' '+sy(to.y)+
+         '" fill="none" stroke="#9aa7a3" stroke-width="3" stroke-dasharray="7 7" marker-end="url(#ah)"/>';
+}
+
+/* ---------- render ---------- */
+const svg=document.getElementById("svg");
+let P=0, idx=0, cur=null, prevAngle=0, playing=false, timer=null, animating=false;
+
+function gridSVG(){
+  let g='<rect x="0" y="0" width="800" height="650" fill="#ffffff"/>';
+  for(let x=XMIN;x<=XMAX;x++)
+    g+='<line x1="'+sx(x)+'" y1="0" x2="'+sx(x)+'" y2="650" stroke="var(--grid)" stroke-width="'+(x===0?2.5:1.4)+'"/>';
+  for(let y=YMIN;y<=YMAX;y++)
+    g+='<line x1="0" y1="'+sy(y)+'" x2="800" y2="'+sy(y)+'" stroke="var(--grid)" stroke-width="'+(y===0?2.5:1.4)+'"/>';
+  return g;
+}
+
+function render(step,animate){
+  const p=PROBLEMS[P], s=step.state, img=cur.img;
+  const cxF=2.5, cyF=1.5;                                  // centroid of ABCD
+  const icx=img.reduce((a,q)=>a+q.x,0)/4, icy=img.reduce((a,q)=>a+q.y,0)/4;
+
+  let out='<defs>'+
+    '<marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">'+
+    '<path d="M 0 0 L 10 5 L 0 10 z" fill="#9aa7a3"/></marker>'+
+    '<marker id="ahP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">'+
+    '<path d="M 0 0 L 10 5 L 0 10 z" fill="#7c3aed"/></marker>'+
+    '<marker id="ahG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">'+
+    '<path d="M 0 0 L 10 5 L 0 10 z" fill="#b6c3bf"/></marker>'+
+    '</defs>';
+  out+=gridSVG();
+
+  // guide arc for corner A
+  if(s.arc) out+=arcPath(V[0],img[0],p.c,p.deg);
+
+  // original figure (always visible)
+  SIDES.forEach(sd=>{ out+=seg(V[sd[0]],V[sd[1]],"var(--fig)",5,""); });
+  V.forEach(v=>{ out+=dot(v.x,v.y,7,"var(--fig)",""); });
+  V.forEach(v=>{ out+=label(v.n,v.x,v.y,cxF,cyF,"var(--fig)",26,""); });
+
+  // centers Q and R
+  out+=dot(p.other.x,p.other.y,7,"#5d726c","");
+  out+=label(p.other.n,p.other.x,p.other.y,cxF,cyF,"#5d726c",24,"");
+  out+=dot(p.c.x,p.c.y,s.hl?12:8,"var(--center)","center");
+  out+=label(p.c.n,p.c.x,p.c.y,cxF,cyF,"var(--center)",26,"");
+
+  // tracing paper (rotating group)
+  if(s.paper){
+    // faint arrow on the GRID showing where the paper arrow started
+    if(s.arrow) out+=arrow(p.c,0,2.2,"#b6c3bf","ahG",3,true);
+
+    const tf='rotate('+s.angle+','+sx(p.c.x)+','+sy(p.c.y)+')';
+    let pg='<g id="paper" transform="'+tf+'">';
+    pg+='<rect x="'+sx(-2.4)+'" y="'+sy(4.4)+'" width="'+(8.8*U)+'" height="'+(6.8*U)+
+        '" fill="rgba(255,215,106,.28)" stroke="#dfa300" stroke-width="3" stroke-dasharray="10 8" rx="6"/>';
+    for(let i=0;i<s.segs;i++){ const sd=SIDES[i]; pg+=seg(V[sd[0]],V[sd[1]],"var(--trace)",4,"ts"+i); }
+    for(let i=0;i<s.dots;i++){ pg+=dot(V[i].x,V[i].y,6,"var(--trace)","td"+i); }
+    for(let i=0;i<s.dots;i++){ pg+=label(V[i].n,V[i].x,V[i].y,cxF,cyF,"var(--trace)",24,""); }
+    if(s.cmark) pg+=dot(p.c.x,p.c.y,6,"#8a5a00","cm");
+    if(s.arrow) pg+=arrow(p.c,0,2.2,"#7c3aed","ahP",4.5,false);
+    pg+='</g>';
+    out+=pg;
+  }
+
+  // image drawn on the grid
+  for(let i=0;i<s.isegs;i++){ const sd=SIDES[i]; out+=seg(img[sd[0]],img[sd[1]],"var(--image)",5,"is"+i); }
+  for(let i=0;i<s.idots;i++){ out+=dot(img[i].x,img[i].y,7,"var(--image)","id"+i); }
+  if(s.labels) img.forEach(q=>{ out+=label(q.n,q.x,q.y,icx,icy,"var(--image)",26,""); });
+
+  if(s.pencil){
+    out+=pencil(p.c.x,p.c.y);
+    out+=dot(p.c.x,p.c.y,6,"var(--center)","");   // point stays visible at the tip
+  }
+
+  svg.innerHTML=out;
+
+  // animate only the newly added mark
+  if(animate&&step.id){
+    const el=svg.querySelector("#"+step.id);
+    if(el){
+      if(el.tagName==="line") el.classList.add("draw");
+      else if(step.id==="paper") el.classList.add("fade");
+      else if(step.id==="pencil") el.classList.add("press");
+      else el.classList.add("pop");
+    }
+  }
+
+  // animate the turn of the paper
+  const g=svg.querySelector("#paper");
+  if(animate && g && s.angle!==prevAngle){
+    animating=true; setButtons();
+    const from=prevAngle, to=s.angle, t0=performance.now(), dur=1500;
+    const cxp=sx(p.c.x), cyp=sy(p.c.y);
+    (function frame(t){
+      let k=Math.min(1,(t-t0)/dur);
+      const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+      g.setAttribute("transform","rotate("+(from+(to-from)*e)+","+cxp+","+cyp+")");
+      if(k<1) requestAnimationFrame(frame);
+      else { animating=false; setButtons(); if(playing) schedule(); }
+    })(t0);
+  }
+  prevAngle=s.angle;
+}
+
+/* ---------- controls ---------- */
+const capEl=document.getElementById("caption"),
+      numEl=document.getElementById("stepnum"),
+      fillEl=document.getElementById("fill"),
+      bBack=document.getElementById("back"),
+      bNext=document.getElementById("next"),
+      bPlay=document.getElementById("play"),
+      bRest=document.getElementById("restart");
+
+function show(i,animate){
+  idx=Math.max(0,Math.min(cur.steps.length-1,i));
+  const st=cur.steps[idx];
+  capEl.innerHTML=st.text;
+  numEl.textContent="Step "+(idx+1)+" of "+cur.steps.length;
+  fillEl.style.width=((idx+1)/cur.steps.length*100)+"%";
+  render(st,animate);
+  setButtons();
+}
+function setButtons(){
+  bBack.disabled=(idx===0)||animating;
+  bNext.disabled=(idx===cur.steps.length-1)||animating;
+  bPlay.textContent=playing?"Pause":"Play all";
+}
+function schedule(){
+  clearTimeout(timer);
+  if(!playing) return;
+  timer=setTimeout(()=>{
+    if(idx<cur.steps.length-1){ show(idx+1,true); if(!animating) schedule(); }
+    else { playing=false; setButtons(); }
+  },1250);
+}
+bNext.onclick=()=>{ playing=false; clearTimeout(timer); show(idx+1,true); setButtons(); };
+bBack.onclick=()=>{ playing=false; clearTimeout(timer); prevAngle=cur.steps[Math.max(0,idx-1)].state.angle; show(idx-1,false); setButtons(); };
+bPlay.onclick=()=>{ playing=!playing; setButtons(); if(playing) schedule(); else clearTimeout(timer); };
+bRest.onclick=()=>{ playing=false; clearTimeout(timer); prevAngle=0; show(0,false); };
+
+document.querySelectorAll(".tab").forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll(".tab").forEach(z=>z.classList.remove("active"));
+    t.classList.add("active");
+    load(+t.dataset.p);
+  };
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowRight"&&!bNext.disabled) bNext.click();
+  if(e.key==="ArrowLeft"&&!bBack.disabled) bBack.click();
+});
+
+function load(p){
+  P=p; playing=false; clearTimeout(timer); prevAngle=0;
+  cur=buildSteps(PROBLEMS[P]);
+  show(0,false);
+}
+load(0);
+})();
+</script>
+</body>
+</html>
